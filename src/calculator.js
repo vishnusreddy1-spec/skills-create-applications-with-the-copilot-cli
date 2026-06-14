@@ -118,3 +118,12 @@ function main(argv) {
 if (require.main === module) {
   main(process.argv.slice(2));
 }
+
+// Export functions for unit testing
+module.exports = {
+  compute,
+  normalizeOp,
+  isNumeric,
+  printHelp,
+  main
+};
