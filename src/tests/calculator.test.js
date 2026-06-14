@@ -80,16 +80,34 @@ describe('calculator CLI', () => {
     expect(r.stdout.trim()).toBe('1');
   });
 
+  test('CLI: 5 % 2 outputs 1 (symbol alias)', () => {
+    const r = spawnSync(node, [script, '%', '5', '2'], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('1');
+  });
+
   test('CLI: pow 2 8 outputs 256', () => {
     const r = spawnSync(node, [script, 'pow', '2', '8'], { encoding: 'utf8' });
     expect(r.status).toBe(0);
     expect(r.stdout.trim()).toBe('256');
   });
 
+  test('CLI: 2 ^ 3 outputs 8 (caret alias)', () => {
+    const r = spawnSync(node, [script, '^', '2', '3'], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('8');
+  });
+
   test('CLI: sqrt 9 outputs 3', () => {
     const r = spawnSync(node, [script, 'sqrt', '9'], { encoding: 'utf8' });
     expect(r.status).toBe(0);
     expect(r.stdout.trim()).toBe('3');
+  });
+
+  test('CLI: sqrt 16 outputs 4 (square root example)', () => {
+    const r = spawnSync(node, [script, 'sqrt', '16'], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('4');
   });
 
   test('CLI: division by zero exits with code 3 and prints error', () => {
