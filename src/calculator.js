@@ -23,11 +23,17 @@ Operations (names and aliases):
   sub   | -    : subtraction
   mul   | * | x: multiplication
   div   | /    : division
+  mod   | %    : modulo (remainder)
+  pow   | ^ | **: exponentiation (power)
+  sqrt  | √    : square root (unary)
 
 Examples:
   node src/calculator.js add 3 5
   node src/calculator.js + 2 4
   node src/calculator.js div 10 2
+  node src/calculator.js mod 10 3
+  node src/calculator.js pow 2 8
+  node src/calculator.js sqrt 9
 
 Flags:
   -h, --help    Show this help message
@@ -54,9 +60,32 @@ function normalizeOp(op) {
     'multiply': 'mul',
     '/': 'div',
     'div': 'div',
-    'divide': 'div'
+    'divide': 'div',
+    '%': 'mod',
+    'mod': 'mod',
+    'modulo': 'mod',
+    '^': 'pow',
+    '**': 'pow',
+    'pow': 'pow',
+    'power': 'pow',
+    'sqrt': 'sqrt',
+    '√': 'sqrt'
   };
   return mapping[op.toString().toLowerCase()] || null;
+}
+
+// New helper functions
+function modulo(a, b) {
+  return a % b;
+}
+
+function power(base, exponent) {
+  return Math.pow(base, exponent);
+}
+
+function squareRoot(n) {
+  if (n < 0) throw new Error('square root of negative number');
+  return Math.sqrt(n);
 }
 
 function compute(op, a, b) {
@@ -69,6 +98,13 @@ function compute(op, a, b) {
       return a * b;
     case 'div':
       return a / b;
+    case 'mod':
+      return modulo(a, b);
+    case 'pow':
+      return power(a, b);
+    case 'sqrt':
+      // unary operation: ignore b
+      return squareRoot(a);
     default:
       throw new Error('Unsupported operation: ' + op);
   }
@@ -81,8 +117,8 @@ function main(argv) {
   }
 
   const [opRaw, aRaw, bRaw] = argv;
-  if (!opRaw || aRaw === undefined || bRaw === undefined) {
-    console.error('Error: missing arguments.');
+  if (!opRaw) {
+    console.error('Error: missing operation.');
     printHelp();
     process.exit(2);
   }
@@ -90,6 +126,39 @@ function main(argv) {
   const op = normalizeOp(opRaw);
   if (!op) {
     console.error(`Error: unknown operation "${opRaw}".`);
+    printHelp();
+    process.exit(2);
+  }
+
+  // Unary operations (only one operand required)
+  const unaryOps = new Set(['sqrt']);
+
+  if (unaryOps.has(op)) {
+    if (aRaw === undefined) {
+      console.error('Error: missing operand for unary operation.');
+      printHelp();
+      process.exit(2);
+    }
+    if (!isNumeric(aRaw)) {
+      console.error('Error: operand must be numeric.');
+      process.exit(2);
+    }
+
+    const a = Number(aRaw);
+
+    if (op === 'sqrt' && a < 0) {
+      console.error('Error: square root of negative number');
+      process.exit(4);
+    }
+
+    const result = compute(op, a);
+    console.log(result);
+    process.exit(0);
+  }
+
+  // Binary operations
+  if (aRaw === undefined || bRaw === undefined) {
+    console.error('Error: missing arguments.');
     printHelp();
     process.exit(2);
   }
@@ -102,14 +171,12 @@ function main(argv) {
   const a = Number(aRaw);
   const b = Number(bRaw);
 
-  if (op === 'div' && b === 0) {
-    console.error('Error: division by zero');
+  if ((op === 'div' || op === 'mod') && b === 0) {
+    console.error('Error: division/modulo by zero');
     process.exit(3);
   }
 
   const result = compute(op, a, b);
-
-  // Print result to stdout (suitable for piping)
   console.log(result);
   process.exit(0);
 }
@@ -125,5 +192,9 @@ module.exports = {
   normalizeOp,
   isNumeric,
   printHelp,
-  main
+  main,
+  // exported helpers
+  modulo,
+  power,
+  squareRoot
 };

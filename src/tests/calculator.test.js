@@ -22,6 +22,18 @@ describe('calculator functions', () => {
     expect(calc.compute('div', 20, 5)).toBe(4);
   });
 
+  test('compute: modulo', () => {
+    expect(calc.compute('mod', 10, 3)).toBe(1);
+  });
+
+  test('compute: power', () => {
+    expect(calc.compute('pow', 2, 8)).toBe(256);
+  });
+
+  test('compute: sqrt', () => {
+    expect(calc.compute('sqrt', 9)).toBe(3);
+  });
+
   test('isNumeric true/false', () => {
     expect(calc.isNumeric('123')).toBe(true);
     expect(calc.isNumeric('abc')).toBe(false);
@@ -31,6 +43,9 @@ describe('calculator functions', () => {
     expect(calc.normalizeOp('+')).toBe('add');
     expect(calc.normalizeOp('x')).toBe('mul');
     expect(calc.normalizeOp('/')).toBe('div');
+    expect(calc.normalizeOp('%')).toBe('mod');
+    expect(calc.normalizeOp('pow')).toBe('pow');
+    expect(calc.normalizeOp('sqrt')).toBe('sqrt');
   });
 });
 
@@ -59,14 +74,44 @@ describe('calculator CLI', () => {
     expect(r.stdout.trim()).toBe('4');
   });
 
+  test('CLI: 10 % 3 outputs 1', () => {
+    const r = spawnSync(node, [script, 'mod', '10', '3'], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('1');
+  });
+
+  test('CLI: pow 2 8 outputs 256', () => {
+    const r = spawnSync(node, [script, 'pow', '2', '8'], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('256');
+  });
+
+  test('CLI: sqrt 9 outputs 3', () => {
+    const r = spawnSync(node, [script, 'sqrt', '9'], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('3');
+  });
+
   test('CLI: division by zero exits with code 3 and prints error', () => {
     const r = spawnSync(node, [script, 'div', '5', '0'], { encoding: 'utf8' });
     expect(r.status).toBe(3);
-    expect(r.stderr).toMatch(/division by zero/i);
+    expect(r.stderr).toMatch(/division/i);
+  });
+
+  test('CLI: modulo by zero exits with code 3 and prints error', () => {
+    const r = spawnSync(node, [script, 'mod', '5', '0'], { encoding: 'utf8' });
+    expect(r.status).toBe(3);
+    expect(r.stderr).toMatch(/division|modulo/i);
+  });
+
+  test('CLI: sqrt negative exits with code 4 and prints error', () => {
+    const r = spawnSync(node, [script, 'sqrt', '-9'], { encoding: 'utf8' });
+    expect(r.status).toBe(4);
+    expect(r.stderr).toMatch(/square root of negative/i);
   });
 
   test('CLI: invalid operator exits non-zero', () => {
-    const r = spawnSync(node, [script, 'pow', '2', '3'], { encoding: 'utf8' });
+    const r = spawnSync(node, [script, 'unknownop', '2', '3'], { encoding: 'utf8' });
     expect(r.status).not.toBe(0);
     expect(r.stderr).toMatch(/unknown operation/i);
   });
@@ -74,6 +119,6 @@ describe('calculator CLI', () => {
   test('CLI: non-numeric operand exits non-zero', () => {
     const r = spawnSync(node, [script, 'add', 'a', '3'], { encoding: 'utf8' });
     expect(r.status).not.toBe(0);
-    expect(r.stderr).toMatch(/operands must be numeric/i);
+    expect(r.stderr).toMatch(/operands must be numeric|operand must be numeric/i);
   });
 });
